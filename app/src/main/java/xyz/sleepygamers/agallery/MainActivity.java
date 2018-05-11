@@ -1,4 +1,4 @@
-package in.sleepygamers.agallery;
+package xyz.sleepygamers.agallery;
 
 import android.Manifest;
 import android.app.Activity;
@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         if(!Function.hasPermissions(this, PERMISSIONS)){
             ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION_KEY);
         }
+        albumList.clear();
     }
 
 
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected String doInBackground(String... args) {
+            albumList.clear();
             String xml = "";
 
             String path = null;
