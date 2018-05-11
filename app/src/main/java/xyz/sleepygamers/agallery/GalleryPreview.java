@@ -1,4 +1,4 @@
-package in.sleepygamers.agallery;
+package xyz.sleepygamers.agallery;
 
 import android.content.Intent;
 import android.os.Bundle;

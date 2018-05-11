@@ -1,4 +1,4 @@
-package in.sleepygamers.agallery;
+package xyz.sleepygamers.agallery;
 
 import org.junit.Test;
 

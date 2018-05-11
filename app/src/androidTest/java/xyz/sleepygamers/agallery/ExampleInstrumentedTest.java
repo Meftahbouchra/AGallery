@@ -1,4 +1,4 @@
-package in.sleepygamers.agallery;
+package xyz.sleepygamers.agallery;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

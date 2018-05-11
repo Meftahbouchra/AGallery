@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">A Gallery</string>
+    <string name="action_reorder">Re Order</string>
+    <string name="action_camera">Camera</string>
 </resources>
