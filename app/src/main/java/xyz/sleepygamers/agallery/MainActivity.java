@@ -34,9 +34,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
+
 public class MainActivity extends AppCompatActivity {
-    static final int REQUEST_IMAGE_CAPTURE = 2;
-    static final int REQUEST_PERMISSION_CAMERA = 3;
+
     static final int REQUEST_PERMISSION_KEY = 1;
     LoadAlbum loadAlbumTask;
     GridView galleryGridView;
@@ -64,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
         if (!Function.hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION_KEY);
         }
-        albumList.clear();
     }
 
     @Override
@@ -83,17 +83,10 @@ public class MainActivity extends AppCompatActivity {
                 // search action
                 return true;
             case R.id.action_camera:
-                dispatchTakePictureIntent();
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
 
@@ -130,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
                 timestamp = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED));
                 countPhoto = Function.getCount(getApplicationContext(), album);
-
                 albumList.add(Function.mappingInbox(album, path, timestamp, Function.converToTime(timestamp), countPhoto));
             }
             cursor.close();

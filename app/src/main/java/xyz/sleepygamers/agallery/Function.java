@@ -43,7 +43,13 @@ public class Function {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put(KEY_ALBUM, album);
         map.put(KEY_PATH, path);
+        if(timestamp == null){
+            timestamp = "";
+        }
         map.put(KEY_TIMESTAMP, timestamp);
+        if(time == null){
+            time = "";
+        }
         map.put(KEY_TIME, time);
         map.put(KEY_COUNT, count);
         return map;
@@ -68,6 +74,9 @@ public class Function {
 
     public static String converToTime(String timestamp)
     {
+        if(timestamp == null){
+            return "";
+        }
         long datetime = Long.parseLong(timestamp);
         Date date = new Date(datetime);
         DateFormat formatter = new SimpleDateFormat("dd/MM HH:mm");
