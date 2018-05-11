@@ -90,7 +90,8 @@ public class FiltersListFragment extends Fragment implements ThumbnailsAdapter.T
 
                 if (bitmap == null) {
            //         thumbImage = BitmapUtils.getBitmapFromAssets(getActivity(), ImageEditActivity.IMAGE_NAME, 100, 100);
-                    thumbImage = BitmapUtils.getBitmapFromPath(getActivity(), ImageEditActivity.IMAGE_NAME, 300, 300);
+                    Bitmap img = BitmapUtils.getBitmapFromPath(getActivity(), ImageEditActivity.IMAGE_NAME, 800, 800);
+                    thumbImage = Bitmap.createScaledBitmap(img,100,100,false);
                 } else {
                           thumbImage = Bitmap.createScaledBitmap(bitmap, 100, 100, false);
                 }

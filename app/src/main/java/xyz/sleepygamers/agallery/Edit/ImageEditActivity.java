@@ -105,7 +105,6 @@ public class ImageEditActivity extends AppCompatActivity implements FiltersListF
     void loadGalleryImage(String data) {
         Bitmap bitmap = BitmapUtils.getBitmapFromPath(this, data, 800, 800);
 
-
         originalImage = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         filteredImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
         finalImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
