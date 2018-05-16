@@ -2,17 +2,17 @@ package xyz.sleepygamers.agallery;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.RelativeLayout;
 
-import com.bumptech.glide.Glide;
-
-import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
 
@@ -21,8 +21,9 @@ import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
  */
 public class GalleryPreview extends AppCompatActivity {
 
-    ImageView GalleryPreviewImg;
-    String path;
+    ArrayList<HashMap<String, String>> imageList = new ArrayList<HashMap<String, String>>();
+    private FullScreenImageAdapter adapter;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,14 +34,22 @@ public class GalleryPreview extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Intent intent = getIntent();
-        path = intent.getStringExtra("path");
-        GalleryPreviewImg = (ImageView) findViewById(R.id.GalleryPreviewImg);
-        Glide.with(GalleryPreview.this)
-                .load(new File(path)) // Uri of the picture
-                .into(GalleryPreviewImg);
+        viewPager = (ViewPager) findViewById(R.id.pager);
+
+        Intent i = getIntent();
+        int position = i.getIntExtra("position", 0);
+        imageList = (ArrayList<HashMap<String, String>>) i.getExtras().getSerializable("list");
+
+        adapter = new FullScreenImageAdapter(GalleryPreview.this,
+                imageList);
+
+        viewPager.setAdapter(adapter);
+
+        // displaying selected image first
+        viewPager.setCurrentItem(position);
 
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -56,8 +65,6 @@ public class GalleryPreview extends AppCompatActivity {
             case R.id.action_edit:
                 editPic();
                 return true;
-            case R.id.action_camera:
-                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -66,8 +73,10 @@ public class GalleryPreview extends AppCompatActivity {
 
     private void editPic() {
         Intent i = new Intent(this, ImageEditActivity.class);
-        i.putExtra("path",path);
+        i.putExtra("path", imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH));
         startActivity(i);
+
     }
+
 
 }
