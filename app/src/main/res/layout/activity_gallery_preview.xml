@@ -9,7 +9,8 @@
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:animateLayoutChanges="true"
+        android:theme="@style/AppTheme.PopupOverlay">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -19,32 +20,8 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <!--
-        <RelativeLayout
-            android:id="@+id/relative_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <com.jsibbold.zoomage.ZoomageView
-                android:id="@+id/GalleryPreviewImg"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_centerInParent="true"
-                android:src="@drawable/blank"
-                app:zoomage_animateOnReset="true"
-                app:zoomage_autoCenter="true"
-                app:zoomage_autoResetMode="UNDER"
-                app:zoomage_maxScale="8"
-                app:zoomage_minScale="0.6"
-                app:zoomage_restrictBounds="false"
-                app:zoomage_translatable="true"
-                app:zoomage_zoomable="true" />
-
-
-        </RelativeLayout>
-    -->
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </LinearLayout>

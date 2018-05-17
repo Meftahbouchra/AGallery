@@ -1,5 +1,6 @@
 package xyz.sleepygamers.agallery;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -7,6 +8,7 @@ import android.database.Cursor;
 import android.database.MergeCursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Created by SHAJIB on 7/16/2017.
@@ -41,6 +44,7 @@ public class AlbumActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album);
+        overridePendingTransition(R.anim.slide_in, R.anim.slide_out);
 
         Intent intent = getIntent();
         album_name = intent.getStringExtra("name");
@@ -67,6 +71,7 @@ public class AlbumActivity extends AppCompatActivity {
     }
 
 
+    @SuppressLint("StaticFieldLeak")
     class LoadAlbumImages extends AsyncTask<String, Void, String> {
         @Override
         protected void onPreExecute() {
@@ -169,7 +174,7 @@ class SingleAlbumAdapter extends BaseAdapter {
                     .into(holder.galleryImage);
 
 
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return convertView;
     }

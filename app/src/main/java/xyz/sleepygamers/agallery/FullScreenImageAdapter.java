@@ -6,13 +6,13 @@ import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -48,7 +48,6 @@ public class FullScreenImageAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         TouchImageView imgDisplay;
-        Button btnClose;
 
         inflater = (LayoutInflater) _activity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -56,7 +55,6 @@ public class FullScreenImageAdapter extends PagerAdapter {
                 false);
 
         imgDisplay = (TouchImageView) viewLayout.findViewById(R.id.imgDisplay);
-        btnClose = (Button) viewLayout.findViewById(R.id.btnClose);
 
         Glide.with(_activity)
                 .load(new File(_imagePaths.get(+position).get(Function.KEY_PATH))) // Uri of the picture
@@ -65,17 +63,11 @@ public class FullScreenImageAdapter extends PagerAdapter {
         imgDisplay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(_activity, "Clicked", Toast.LENGTH_SHORT).show();
+                //       Toast.makeText(_activity, "Clicked", Toast.LENGTH_SHORT).show();
+                ((GalleryPreview) _activity).setToolbarView();
             }
         });
 
-        // close button click event
-        btnClose.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                _activity.finish();
-            }
-        });
 
         ((ViewPager) container).addView(viewLayout);
 
@@ -87,4 +79,5 @@ public class FullScreenImageAdapter extends PagerAdapter {
         ((ViewPager) container).removeView((RelativeLayout) object);
 
     }
+
 }

@@ -2,18 +2,28 @@ package xyz.sleepygamers.agallery;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.MergeCursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,19 +32,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
-import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
+import xyz.sleepygamers.agallery.utils.BitmapUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,12 +64,18 @@ public class MainActivity extends AppCompatActivity {
     LoadAlbum loadAlbumTask;
     GridView galleryGridView;
     ArrayList<HashMap<String, String>> albumList = new ArrayList<HashMap<String, String>>();
+    AlbumAdapter adapter;
+    // Activity request codes
+    private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
+    private static final String IMAGE_DIRECTORY_NAME = "Camera";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().setTitle("Albums");
+
         galleryGridView = (GridView) findViewById(R.id.galleryGridView);
 
         int iDisplayWidth = getResources().getDisplayMetrics().widthPixels;
@@ -81,12 +109,111 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_reorder:
                 // search action
+                reorder();
                 return true;
             case R.id.action_camera:
+                cameraFunction();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void reorder() {
+        //  Collections.sort(albumList, new MapComparator(Function.KEY_ALBUM, "dsc"));
+        //  adapter.notifyDataSetChanged();
+        // custom dialog
+        final Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.main_activity_reorder_dialog);
+        dialog.setTitle("Reorder...");
+        final RadioGroup radioGroup = dialog.findViewById(R.id.radio);
+        final RadioGroup radioGroup2 = dialog.findViewById(R.id.radio2);
+        Button dialogButton = (Button) dialog.findViewById(R.id.buttonShowCustomDialog);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String order = "dsc";
+                switch (radioGroup2.getCheckedRadioButtonId()) {
+                    case R.id.rb_asc:
+                        order = "asc";
+                        break;
+                    case R.id.rb_dsc:
+                        order = "dsc";
+                        break;
+                    default:
+
+                }
+                switch (radioGroup.getCheckedRadioButtonId()) {
+                    case R.id.rb_time:
+                        Collections.sort(albumList, new MapComparator(Function.KEY_TIMESTAMP, order));
+                        break;
+                    case R.id.rb_name:
+                        Collections.sort(albumList, new MapComparator(Function.KEY_ALBUM, order));
+                        break;
+                    case R.id.rb_path:
+                        Collections.sort(albumList, new MapComparator(Function.KEY_PATH, order));
+                        break;
+                    default:
+                }
+
+                adapter.notifyDataSetChanged();
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void cameraFunction() {
+        Dexter.withActivity(this)
+                .withPermission(Manifest.permission.CAMERA)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        openCamera();
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        makeToast();
+                    }
+
+                    void makeToast() {
+                        Toast.makeText(MainActivity.this, "You must accept camera permission", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {/* ... */}
+                }).check();
+    }
+
+    private void openCamera() {
+        if (isDeviceSupportCamera()) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
+        } else
+            Toast.makeText(this, "Device doesn't support camera", Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean isDeviceSupportCamera() {
+        if (getApplicationContext().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_CAMERA)) {
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
+
+    void saveImageToGalley(Bitmap finalImage) {
+        final String path = BitmapUtils.insertImageFromCamera(this, finalImage);
+        if (!TextUtils.isEmpty(path)) {
+            Toast.makeText(this, "image stored successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Unable to save image!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -133,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String xml) {
 
-            AlbumAdapter adapter = new AlbumAdapter(MainActivity.this, albumList);
+            adapter = new AlbumAdapter(MainActivity.this, albumList);
             galleryGridView.setAdapter(adapter);
             galleryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view,
@@ -158,11 +285,33 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "You must accept permissions.", Toast.LENGTH_LONG).show();
                 }
+                break;
             }
         }
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Bundle extras = data.getExtras();
+                Bitmap bmp = (Bitmap) extras.get("data");
+                saveImageToGalley(bmp);
+            } else if (resultCode == RESULT_CANCELED) {
+                // user cancelled Image capture
+                Toast.makeText(getApplicationContext(),
+                        "Cancelled image capture", Toast.LENGTH_SHORT)
+                        .show();
+            } else {
+                // failed to capture image
+                Toast.makeText(getApplicationContext(),
+                        "Sorry! Failed to capture image", Toast.LENGTH_SHORT)
+                        .show();
+            }
+        }
+
+    }
 
     @Override
     protected void onResume() {
