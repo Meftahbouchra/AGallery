@@ -1,4 +1,4 @@
-package xyz.sleepygamers.agallery;
+package xyz.sleepygamers.agallery.FullScreenImage;
 
 
 import android.content.Intent;
@@ -7,17 +7,16 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
+import xyz.sleepygamers.agallery.utils.Function;
+import xyz.sleepygamers.agallery.R;
 
 
 public class GalleryPreview extends AppCompatActivity {

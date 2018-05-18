@@ -1,4 +1,4 @@
-package xyz.sleepygamers.agallery;
+package xyz.sleepygamers.agallery.FullScreenImage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,21 +11,19 @@ import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import xyz.sleepygamers.agallery.FullScreenImage.GalleryPreview;
+import xyz.sleepygamers.agallery.R;
+import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.utils.TouchImageView;
 
 public class FullScreenImageAdapter extends PagerAdapter {
 
-    private Activity _activity;
     ArrayList<HashMap<String, String>> _imagePaths;
+    private Activity _activity;
     private LayoutInflater inflater;
 
     // constructor

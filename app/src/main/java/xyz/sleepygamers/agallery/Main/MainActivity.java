@@ -1,45 +1,31 @@
-package xyz.sleepygamers.agallery;
+package xyz.sleepygamers.agallery.Main;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.MergeCursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -56,7 +42,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 
-import xyz.sleepygamers.agallery.utils.BitmapUtils;
+import xyz.sleepygamers.agallery.Album.AlbumActivity;
+import xyz.sleepygamers.agallery.R;
+import xyz.sleepygamers.agallery.utils.Function;
+import xyz.sleepygamers.agallery.utils.MapComparator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<HashMap<String, String>> albumList = new ArrayList<HashMap<String, String>>();
     AlbumAdapter adapter;
     // Activity request codes
-    private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
-    private static final String IMAGE_DIRECTORY_NAME = "Camera";
+    private static final int REQUEST_CAPTURE_IMAGE = 100;
+    String imageFilePath;
 
 
     @Override
@@ -191,10 +180,34 @@ public class MainActivity extends AppCompatActivity {
 
     private void openCamera() {
         if (isDeviceSupportCamera()) {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
+            openCameraIntent();
         } else
             Toast.makeText(this, "Device doesn't support camera", Toast.LENGTH_SHORT).show();
+    }
+
+    private void openCameraIntent() {
+        Intent pictureIntent = new Intent(
+                MediaStore.ACTION_IMAGE_CAPTURE);
+        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+            //Create a file to store the image
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this, "xyz.sleepygamers.agallery.provider", photoFile);
+                pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        photoURI);
+                try {
+                    startActivityForResult(pictureIntent,
+                            REQUEST_CAPTURE_IMAGE);
+                } catch (Exception e) {
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
     private boolean isDeviceSupportCamera() {
@@ -208,13 +221,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void saveImageToGalley(Bitmap finalImage) {
-        final String path = BitmapUtils.insertImageFromCamera(this, finalImage);
-        if (!TextUtils.isEmpty(path)) {
-            Toast.makeText(this, "image stored successfully", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Unable to save image!", Toast.LENGTH_SHORT).show();
+    private void galleryAddPic() {
+        try {
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            File f = new File(imageFilePath);
+            Uri contentUri = Uri.fromFile(f);
+            mediaScanIntent.setData(contentUri);
+            this.sendBroadcast(mediaScanIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private File createImageFile() throws IOException {
+        String timeStamp =
+                new SimpleDateFormat("yyyyMMdd_HHmmss",
+                        Locale.getDefault()).format(new Date());
+        String imageFileName = "IMG_" + timeStamp + "_";
+        File storageDir =
+                //            getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        imageFilePath = image.getAbsolutePath();
+        return image;
     }
 
     class LoadAlbum extends AsyncTask<String, Void, String> {
@@ -293,24 +328,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
-                Bitmap bmp = (Bitmap) extras.get("data");
-                saveImageToGalley(bmp);
-            } else if (resultCode == RESULT_CANCELED) {
-                // user cancelled Image capture
-                Toast.makeText(getApplicationContext(),
-                        "Cancelled image capture", Toast.LENGTH_SHORT)
-                        .show();
+        if (requestCode == REQUEST_CAPTURE_IMAGE) {
+            if (resultCode == RESULT_CANCELED) {
+                deleteFile();
             } else {
-                // failed to capture image
-                Toast.makeText(getApplicationContext(),
-                        "Sorry! Failed to capture image", Toast.LENGTH_SHORT)
-                        .show();
+                galleryAddPic();
             }
         }
 
+    }
+
+    private void deleteFile() {
+        try {
+            File file = new File(imageFilePath);
+            boolean deleted = file.delete();
+        } catch (Exception e) {
+        }
     }
 
     @Override
@@ -329,65 +362,3 @@ public class MainActivity extends AppCompatActivity {
 }
 
 
-class AlbumAdapter extends BaseAdapter {
-    private Activity activity;
-    private ArrayList<HashMap<String, String>> data;
-
-    public AlbumAdapter(Activity a, ArrayList<HashMap<String, String>> d) {
-        activity = a;
-        data = d;
-    }
-
-    public int getCount() {
-        return data.size();
-    }
-
-    public Object getItem(int position) {
-        return position;
-    }
-
-    public long getItemId(int position) {
-        return position;
-    }
-
-    public View getView(int position, View convertView, ViewGroup parent) {
-        AlbumViewHolder holder = null;
-        if (convertView == null) {
-            holder = new AlbumViewHolder();
-            convertView = LayoutInflater.from(activity).inflate(
-                    R.layout.album_row, parent, false);
-
-            holder.galleryImage = (ImageView) convertView.findViewById(R.id.galleryImage);
-            holder.gallery_count = (TextView) convertView.findViewById(R.id.gallery_count);
-            holder.gallery_title = (TextView) convertView.findViewById(R.id.gallery_title);
-
-            convertView.setTag(holder);
-        } else {
-            holder = (AlbumViewHolder) convertView.getTag();
-        }
-        holder.galleryImage.setId(position);
-        holder.gallery_count.setId(position);
-        holder.gallery_title.setId(position);
-
-        HashMap<String, String> song = new HashMap<String, String>();
-        song = data.get(position);
-        try {
-            holder.gallery_title.setText(song.get(Function.KEY_ALBUM));
-            holder.gallery_count.setText(song.get(Function.KEY_COUNT));
-
-            Glide.with(activity)
-                    .load(new File(song.get(Function.KEY_PATH))) // Uri of the picture
-                    .into(holder.galleryImage);
-
-
-        } catch (Exception e) {
-        }
-        return convertView;
-    }
-}
-
-
-class AlbumViewHolder {
-    ImageView galleryImage;
-    TextView gallery_count, gallery_title;
-}
