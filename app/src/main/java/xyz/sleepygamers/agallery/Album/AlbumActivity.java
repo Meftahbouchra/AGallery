@@ -1,5 +1,6 @@
 package xyz.sleepygamers.agallery.Album;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -9,17 +10,20 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
 import xyz.sleepygamers.agallery.FullScreenImage.GalleryPreview;
+import xyz.sleepygamers.agallery.Main.MainActivity;
 import xyz.sleepygamers.agallery.R;
 import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.utils.MapComparator;
@@ -75,6 +79,7 @@ public class AlbumActivity extends AppCompatActivity {
         }
 
         protected String doInBackground(String... args) {
+            imageList.clear();
             String xml = "";
 
             String path = null;
@@ -104,7 +109,6 @@ public class AlbumActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String xml) {
-
             SingleAlbumAdapter adapter = new SingleAlbumAdapter(AlbumActivity.this, imageList);
             galleryGridView.setAdapter(adapter);
             galleryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -120,6 +124,14 @@ public class AlbumActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadAlbumTask = new LoadAlbumImages();
+        loadAlbumTask.execute();
+
     }
 }
 
