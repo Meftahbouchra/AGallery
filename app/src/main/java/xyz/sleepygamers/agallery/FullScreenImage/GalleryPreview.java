@@ -1,11 +1,15 @@
 package xyz.sleepygamers.agallery.FullScreenImage;
 
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -23,18 +27,25 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
 import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.R;
+import xyz.sleepygamers.agallery.utils.MapComparator;
 
 
 public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPageChangeListener {
@@ -84,10 +95,11 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
         ib_delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteFileFromPath();
+                showDeleteDialog();
             }
         });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -101,13 +113,81 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     public boolean onOptionsItemSelected(MenuItem item) {
         // Take appropriate action for each action item click
         switch (item.getItemId()) {
-            case R.id.action_edit:
-                editPic();
+            case R.id.action_share:
+                sharePicture();
+                return true;
+            case R.id.action_details:
+                setPictureDetails();
+                return true;
+            case R.id.action_setpicture:
+                setPictureAs();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void setPictureDetails() {
+        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String title = "", time = "", width = "", height = "", filesize = "";
+        try {
+            ExifInterface exifInterface = new ExifInterface(path);
+            ImageDetailsHelper details = new ImageDetailsHelper(exifInterface, path);
+            title = details.getTitle();
+            time = details.getTime();
+            width = details.getWidth();
+            height = details.getHeight();
+            filesize = details.getFilesize()+" KB";
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.gallery_preview_details_dialog);
+        dialog.setTitle("Reorder...");
+        TextView tv_path, tv_title, tv_time, tv_width, tv_height, tv_filesize;
+        tv_path = dialog.findViewById(R.id.path);
+        tv_title = dialog.findViewById(R.id.title);
+        tv_time = dialog.findViewById(R.id.time);
+        tv_width = dialog.findViewById(R.id.width);
+        tv_height = dialog.findViewById(R.id.height);
+        tv_filesize = dialog.findViewById(R.id.filesize);
+        tv_path.setText(path);
+        tv_title.setText(title);
+        tv_time.setText(time);
+        tv_width.setText(width);
+        tv_height.setText(height);
+        tv_filesize.setText(filesize);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.close);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+
+    }
+
+    private void sharePicture() {
+        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        Uri uri = Uri.fromFile(new File(path));
+        Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+        shareIntent.setType("image/*");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share)));
+    }
+
+    private void setPictureAs() {
+        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        Uri uri = Uri.fromFile(new File(path));
+        Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
+        intent.setDataAndType(uri, "image/*");
+        intent.putExtra("mimeType", "image/*");
+        startActivity(Intent.createChooser(intent,
+                getString(R.string.setpicture)));
     }
 
     private void editPic() {
@@ -146,17 +226,38 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
         }
     }
 
+    private void showDeleteDialog() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        deleteFileFromPath();
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button clicked
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(GalleryPreview.this);
+        builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
+    }
+
     void deleteFileFromPath() {
         String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
         File file = new File(path);
         // Set up the projection (we only need the ID)
         String[] projection = {MediaStore.Images.Media._ID};
 
-// Match on the file path
+        // Match on the file path
         String selection = MediaStore.Images.Media.DATA + " = ?";
         String[] selectionArgs = new String[]{file.getAbsolutePath()};
 
-// Query for the ID of the media matching the file path
+        // Query for the ID of the media matching the file path
         Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         ContentResolver contentResolver = getContentResolver();
         Cursor c = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
