@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    android:orientation="vertical">
+    android:background="@android:color/black"
+    tools:context=".FullScreenImage.GalleryPreview">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -23,5 +24,46 @@
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</LinearLayout>
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/black"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="8dp"
+        android:theme="@style/AppTheme.PopupOverlay">
+
+        <ImageButton
+            android:id="@+id/ib_edit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:padding="8dp"
+            android:src="@drawable/baseline_edit_white_24" />
+
+        <ImageButton
+            android:id="@+id/ib_crop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:padding="8dp"
+            android:src="@drawable/baseline_crop_white_24" />
+
+        <ImageButton
+            android:id="@+id/ib_delete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:padding="8dp"
+            android:src="@drawable/baseline_delete_white_24" />
+    </LinearLayout>
+</RelativeLayout>
