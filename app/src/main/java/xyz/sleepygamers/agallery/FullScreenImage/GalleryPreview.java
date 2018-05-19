@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -35,12 +36,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.soundcloud.android.crop.Crop;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
 import xyz.sleepygamers.agallery.utils.Function;
@@ -57,6 +63,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     boolean mToolbarVisibility = true;
     LinearLayout bottomBar;
     ImageButton ib_edit, ib_crop, ib_delete;
+    String imageFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +93,12 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
         ib_edit = findViewById(R.id.ib_edit);
         ib_crop = findViewById(R.id.ib_crop);
         ib_delete = findViewById(R.id.ib_delete);
+        ib_crop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cropFuntion();
+            }
+        });
         ib_edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,6 +113,65 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
         });
     }
 
+    private void cropFuntion() {
+        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        Uri inputUri = Uri.fromFile(new File(path));
+        File photoFile = null;
+        try {
+            String timeStamp =
+                    new SimpleDateFormat("yyyyMMdd_HHmmss",
+                            Locale.getDefault()).format(new Date());
+            String imageFileName = "IMG_" + timeStamp + "_";
+            File storageDir =
+                    //            getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+            photoFile = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+            imageFilePath = photoFile.getAbsolutePath();
+
+        } catch (IOException ex) {
+            // Error occurred while creating the File
+        }
+        if (photoFile != null) {
+            Uri photoURI = FileProvider.getUriForFile(this, "xyz.sleepygamers.agallery.provider", photoFile);
+            Crop.of(inputUri, photoURI).asSquare().start(this);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent result) {
+        if (requestCode == Crop.REQUEST_CROP) {
+            if (resultCode == RESULT_OK) {
+                galleryAddPic();
+            } else if (resultCode == RESULT_CANCELED) {
+                deleteFile();
+            }
+        }
+    }
+
+    private void deleteFile() {
+        try {
+            File file = new File(imageFilePath);
+            boolean deleted = file.delete();
+        } catch (Exception e) {
+        }
+    }
+
+    private void galleryAddPic() {
+        try {
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            File f = new File(imageFilePath);
+            Uri contentUri = Uri.fromFile(f);
+            mediaScanIntent.setData(contentUri);
+            this.sendBroadcast(mediaScanIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -138,7 +210,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
             time = details.getTime();
             width = details.getWidth();
             height = details.getHeight();
-            filesize = details.getFilesize()+" KB";
+            filesize = details.getFilesize() + " KB";
         } catch (IOException e) {
             e.printStackTrace();
         }
