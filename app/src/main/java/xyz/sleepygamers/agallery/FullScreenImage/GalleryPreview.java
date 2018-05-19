@@ -1,14 +1,18 @@
 package xyz.sleepygamers.agallery.FullScreenImage;
 
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.WallpaperManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -36,6 +40,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
@@ -49,6 +59,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
+import xyz.sleepygamers.agallery.Main.MainActivity;
 import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.R;
 import xyz.sleepygamers.agallery.utils.MapComparator;
@@ -194,10 +205,51 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
             case R.id.action_setpicture:
                 setPictureAs();
                 return true;
-
+            case R.id.action_setwallpaper:
+                wallpaperFunction();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void wallpaperFunction() {
+        Dexter.withActivity(this)
+                .withPermission(Manifest.permission.CAMERA)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+
+                        WallpaperManager myWallpaperManager = WallpaperManager
+                                .getInstance(GalleryPreview.this);
+                        String imageFilePath = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+                        Bitmap myBitmap = BitmapFactory.decodeFile(imageFilePath);
+                        if (myBitmap != null) {
+                            try {
+                                myWallpaperManager.setBitmap(myBitmap);
+                            } catch (IOException e) {
+                                Toast.makeText(GalleryPreview.this,
+                                        "Failed to set Wallpaper", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(GalleryPreview.this,
+                                    "Failed to decode image", Toast.LENGTH_SHORT).show();
+
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        makeToast();
+                    }
+
+                    void makeToast() {
+                        Toast.makeText(GalleryPreview.this, "You must accept wallpaper permission", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {/* ... */}
+                }).check();
     }
 
     private void setPictureDetails() {
