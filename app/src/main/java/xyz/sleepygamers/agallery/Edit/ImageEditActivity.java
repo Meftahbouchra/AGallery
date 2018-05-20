@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
@@ -15,7 +16,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +34,7 @@ import com.zomato.photofilters.imageprocessors.subfilters.SaturationSubfilter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -85,12 +86,17 @@ public class ImageEditActivity extends AppCompatActivity implements FiltersListF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_edit);
+        overridePendingTransition(R.anim.slide_in, R.anim.slide_out);
+
         ButterKnife.bind(this);
         IMAGE_NAME = getIntent().getStringExtra("path");
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle(getString(R.string.activity_title_main));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(getString(R.string.activity_title_main));
+        }
+
 
         //loadImage();
         setupViewPager(viewPager);
@@ -239,10 +245,12 @@ public class ImageEditActivity extends AppCompatActivity implements FiltersListF
             saveImageToGallery();
             return true;
         }
-
+        if (id == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
-
 
 
     /*

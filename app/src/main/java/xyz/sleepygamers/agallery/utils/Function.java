@@ -1,4 +1,5 @@
-package xyz.sleepygamers.agallery;
+package xyz.sleepygamers.agallery.utils;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -19,14 +20,14 @@ import java.util.HashMap;
 public class Function {
 
 
-    static final String KEY_ALBUM = "album_name";
-    static final String KEY_PATH = "path";
-    static final String KEY_TIMESTAMP = "timestamp";
-    static final String KEY_TIME = "date";
-    static final String KEY_COUNT = "date";
+    static final public String KEY_ALBUM = "album_name";
+    static final public String KEY_PATH = "path";
+    static final public String KEY_TIMESTAMP = "timestamp";
+    static final public String KEY_TIME = "date";
+    static final public String KEY_COUNT = "date";
 
 
-    public static  boolean hasPermissions(Context context, String... permissions) {
+    public static boolean hasPermissions(Context context, String... permissions) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
             for (String permission : permissions) {
                 if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -38,16 +39,15 @@ public class Function {
     }
 
 
-    public static HashMap<String, String> mappingInbox(String album, String path, String timestamp, String time, String count)
-    {
+    public static HashMap<String, String> mappingInbox(String album, String path, String timestamp, String time, String count) {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put(KEY_ALBUM, album);
         map.put(KEY_PATH, path);
-        if(timestamp == null){
+        if (timestamp == null) {
             timestamp = "";
         }
         map.put(KEY_TIMESTAMP, timestamp);
-        if(time == null){
+        if (time == null) {
             time = "";
         }
         map.put(KEY_TIME, time);
@@ -56,25 +56,22 @@ public class Function {
     }
 
 
-
-    public static String getCount(Context c, String album_name)
-    {
+    public static String getCount(Context c, String album_name) {
         Uri uriExternal = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         Uri uriInternal = android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI;
 
-        String[] projection = { MediaStore.MediaColumns.DATA,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.MediaColumns.DATE_MODIFIED };
-        Cursor cursorExternal = c.getContentResolver().query(uriExternal, projection, "bucket_display_name = \""+album_name+"\"", null, null);
-        Cursor cursorInternal = c.getContentResolver().query(uriInternal, projection, "bucket_display_name = \""+album_name+"\"", null, null);
-        Cursor cursor = new MergeCursor(new Cursor[]{cursorExternal,cursorInternal});
+        String[] projection = {MediaStore.MediaColumns.DATA,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.MediaColumns.DATE_MODIFIED};
+        Cursor cursorExternal = c.getContentResolver().query(uriExternal, projection, "bucket_display_name = \"" + album_name + "\"", null, null);
+        Cursor cursorInternal = c.getContentResolver().query(uriInternal, projection, "bucket_display_name = \"" + album_name + "\"", null, null);
+        Cursor cursor = new MergeCursor(new Cursor[]{cursorExternal, cursorInternal});
 
 
-        return cursor.getCount()+" Photos";
+        return cursor.getCount() + " Photos";
     }
 
-    public static String converToTime(String timestamp)
-    {
-        if(timestamp == null){
+    public static String converToTime(String timestamp) {
+        if (timestamp == null) {
             return "";
         }
         long datetime = Long.parseLong(timestamp);
@@ -83,7 +80,7 @@ public class Function {
         return formatter.format(date);
     }
 
-    public static float convertDpToPixel(float dp, Context context){
+    public static float convertDpToPixel(float dp, Context context) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
         float px = dp * (metrics.densityDpi / 160f);

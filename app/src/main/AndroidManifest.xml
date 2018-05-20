@@ -2,8 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="xyz.sleepygamers.agallery">
 
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
 
     <application
         android:allowBackup="true"
@@ -11,9 +14,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
         <activity
-            android:name=".MainActivity"
+            android:name=".Main.MainActivity"
             android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,14 +26,26 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AlbumActivity"
+            android:name=".Album.AlbumActivity"
             android:configChanges="orientation|screenSize" />
         <activity
-            android:name=".GalleryPreview"
+            android:name=".FullScreenImage.GalleryPreview"
             android:configChanges="orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar.Fullscreen"/>
-        <activity android:name=".Edit.ImageEditActivity"
-            android:theme="@style/AppTheme.NoActionBar.Fullscreen"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Edit.ImageEditActivity"
+            android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
+        <activity android:name=".Wallpaper.WallpaperActivity"></activity>
+        <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
     </application>
 
 </manifest>

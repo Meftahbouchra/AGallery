@@ -1,4 +1,4 @@
-package xyz.sleepygamers.agallery;
+package xyz.sleepygamers.agallery.utils;
 
 import java.util.Comparator;
 import java.util.HashMap;

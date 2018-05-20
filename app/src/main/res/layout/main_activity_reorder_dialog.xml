@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="16dp">
+
+    <RadioGroup
+        android:id="@+id/radio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/rb_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time" />
+
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/rb_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Name" />
+
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/rb_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Path" />
+
+    </RadioGroup>
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:layout_below="@id/radio"
+        android:background="@android:color/darker_gray" />
+
+    <RadioGroup
+        android:id="@+id/radio2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/separator">
+
+
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/rb_asc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ascending" />
+
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/rb_dsc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Descending" />
+
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/buttonShowCustomDialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/radio2"
+        android:layout_centerHorizontal="true"
+        android:text="SORT" />
+
+</RelativeLayout>

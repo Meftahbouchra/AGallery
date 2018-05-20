@@ -10,14 +10,19 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Random;
 
 /**
  * Created by ravi on 06/11/17.
@@ -79,6 +84,7 @@ public class BitmapUtils {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeFile(picturePath, options);
     }
+
     public static Bitmap getBitmapFromPath(Context context, String picturePath, int width, int height) {
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -92,6 +98,7 @@ public class BitmapUtils {
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeFile(picturePath, options);
     }
+
     private static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
@@ -133,6 +140,7 @@ public class BitmapUtils {
 
     /**
      * Storing image to device gallery
+     *
      * @param cr
      * @param source
      * @param title
@@ -238,4 +246,5 @@ public class BitmapUtils {
             return null;
         }
     }
+
 }
