@@ -1,6 +1,5 @@
 package xyz.sleepygamers.agallery.FullScreenImage;
 
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -14,18 +13,15 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.design.widget.AppBarLayout;
 import android.support.v4.content.FileProvider;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,11 +31,10 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -50,56 +45,76 @@ import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 
 import xyz.sleepygamers.agallery.Edit.ImageEditActivity;
-import xyz.sleepygamers.agallery.Main.MainActivity;
-import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.R;
-import xyz.sleepygamers.agallery.utils.MapComparator;
+import xyz.sleepygamers.agallery.utils.RealPathUtil;
+import xyz.sleepygamers.agallery.utils.TouchImageView;
 
-import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
-import static android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+public class ImageViewActivity extends AppCompatActivity {
 
-
-public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPageChangeListener {
-
-    ArrayList<HashMap<String, String>> imageList = new ArrayList<HashMap<String, String>>();
-    private FullScreenImageAdapter adapter;
-    private ViewPager viewPager;
-    Toolbar mToolbar;
     boolean mToolbarVisibility = true;
     LinearLayout bottomBar;
     ImageButton ib_edit, ib_crop, ib_delete;
     String imageFilePath;
+    Uri imageURI;
+    Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_gallery_preview);
-        overridePendingTransition(R.anim.slide_in, R.anim.slide_out);
+        setContentView(R.layout.activity_image_view);
 
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
-        viewPager = (ViewPager) findViewById(R.id.pager);
-        Intent i = getIntent();
-        int position = i.getIntExtra("position", 0);
-        imageList = (ArrayList<HashMap<String, String>>) i.getExtras().getSerializable("list");
-        adapter = new FullScreenImageAdapter(GalleryPreview.this,
-                imageList);
-        viewPager.setAdapter(adapter);
+        // Get intent, action and MIME type
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_VIEW.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                handleSendImage(intent);
+            } else {
+                Toast.makeText(this, "Invalid Image", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        } else {
+            Toast.makeText(this, "No actions specified", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        TouchImageView imgDisplay = (TouchImageView) findViewById(R.id.imgDisplay);
+
+        Glide.with(ImageViewActivity.this)
+                .load(new File(imageFilePath)).into(imgDisplay);
+
+        imgDisplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //       Toast.makeText(_activity, "Clicked", Toast.LENGTH_SHORT).show();
+                setToolbarView();
+            }
+        });
+
         setTitle();
-        // displaying selected image first
-        viewPager.setCurrentItem(position);
-        viewPager.addOnPageChangeListener(this);
         setBottomBar();
+    }
+
+    void handleSendImage(Intent intent) {
+        Uri imageUri = intent.getData();
+        if (imageUri != null) {
+            // Update UI to reflect image being shared
+            //imageURI = imageUri;
+            imageFilePath = RealPathUtil.getPath(this, imageUri);
+            imageURI = Uri.fromFile(new File(imageFilePath));
+        } else {
+            Toast.makeText(this, "Invalid Image", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
     private void setBottomBar() {
@@ -128,7 +143,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     }
 
     private void cropFuntion() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         Uri inputUri = Uri.fromFile(new File(path));
         File photoFile = null;
         try {
@@ -152,7 +167,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
         }
         if (photoFile != null) {
             Uri photoURI = FileProvider.getUriForFile(this, "xyz.sleepygamers.agallery.provider", photoFile);
-            Crop.of(inputUri, photoURI).asSquare().start(this);
+            Crop.of(inputUri, photoURI).start(this);
         }
     }
 
@@ -190,7 +205,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_gallery_preview, menu);
+        inflater.inflate(R.menu.menu_image_view, menu);
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -224,18 +239,18 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
                     public void onPermissionGranted(PermissionGrantedResponse response) {
 
                         WallpaperManager myWallpaperManager = WallpaperManager
-                                .getInstance(GalleryPreview.this);
-                        String imageFilePath = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+                                .getInstance(ImageViewActivity.this);
+                        String imageFilePath = imageURI.getPath();
                         Bitmap myBitmap = BitmapFactory.decodeFile(imageFilePath);
                         if (myBitmap != null) {
                             try {
                                 myWallpaperManager.setBitmap(myBitmap);
                             } catch (IOException e) {
-                                Toast.makeText(GalleryPreview.this,
+                                Toast.makeText(ImageViewActivity.this,
                                         "Failed to set Wallpaper", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            Toast.makeText(GalleryPreview.this,
+                            Toast.makeText(ImageViewActivity.this,
                                     "Failed to decode image", Toast.LENGTH_SHORT).show();
 
                         }
@@ -247,7 +262,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
                     }
 
                     void makeToast() {
-                        Toast.makeText(GalleryPreview.this, "You must accept wallpaper permission", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ImageViewActivity.this, "You must accept wallpaper permission", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -256,7 +271,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     }
 
     private void setPictureDetails() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         String title = "", time = "", width = "", height = "", filesize = "";
         try {
             ExifInterface exifInterface = new ExifInterface(path);
@@ -299,7 +314,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     }
 
     private void sharePicture() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         Uri uri = Uri.fromFile(new File(path));
         Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
         shareIntent.setType("image/*");
@@ -308,7 +323,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
     }
 
     private void setPictureAs() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         Uri uri = Uri.fromFile(new File(path));
         Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
         intent.setDataAndType(uri, "image/*");
@@ -319,7 +334,7 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
 
     private void editPic() {
         Intent i = new Intent(this, ImageEditActivity.class);
-        i.putExtra("path", imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH));
+        i.putExtra("path", imageURI.getPath());
         startActivity(i);
 
     }
@@ -338,11 +353,10 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
             //     mToolbar.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2));
         }
         mToolbarVisibility = !mToolbarVisibility;
-
     }
 
     void setTitle() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         try {
             path = path.substring(path.lastIndexOf("/") + 1);
             if (path.length() > 15) {
@@ -370,13 +384,13 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
             }
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(GalleryPreview.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ImageViewActivity.this);
         builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener).show();
     }
 
     void deleteFileFromPath() {
-        String path = imageList.get(+viewPager.getCurrentItem()).get(Function.KEY_PATH);
+        String path = imageURI.getPath();
         File file = new File(path);
         // Set up the projection (we only need the ID)
         String[] projection = {MediaStore.Images.Media._ID};
@@ -404,19 +418,4 @@ public class GalleryPreview extends AppCompatActivity implements ViewPager.OnPag
 
     }
 
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-    }
-
-    @Override
-    public void onPageSelected(int position) {
-        setTitle();
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-
-    }
 }
