@@ -14,3 +14,5 @@ https://github.com/ravi8x/AndroidPhotoFilters
 Used android-crop library
 link
 https://github.com/jdamcd/android-crop
+
+Thanks @hafizahmmed for the icons
