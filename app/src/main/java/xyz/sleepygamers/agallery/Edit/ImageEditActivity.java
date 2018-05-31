@@ -40,6 +40,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import xyz.sleepygamers.agallery.R;
 import xyz.sleepygamers.agallery.utils.BitmapUtils;
+import xyz.sleepygamers.agallery.utils.RealPathUtil;
 
 public class ImageEditActivity extends AppCompatActivity implements FiltersListFragment.FiltersListFragmentListener, EditImageFragment.EditImageFragmentListener {
 
@@ -89,7 +90,23 @@ public class ImageEditActivity extends AppCompatActivity implements FiltersListF
         overridePendingTransition(R.anim.slide_in, R.anim.slide_out);
 
         ButterKnife.bind(this);
-        IMAGE_NAME = getIntent().getStringExtra("path");
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (imageUri != null) {
+                    // Update UI to reflect image being shared
+                    IMAGE_NAME = RealPathUtil.getPath(this,imageUri);
+                }
+
+            }
+        } else {
+            // Handle other intents, such as being started from the home screen
+            IMAGE_NAME = intent.getStringExtra("path");
+        }
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -102,9 +119,7 @@ public class ImageEditActivity extends AppCompatActivity implements FiltersListF
         setupViewPager(viewPager);
         tabLayout.setupWithViewPager(viewPager);
 
-        String path = getIntent().getStringExtra("path");
-        //Uri uri = Uri.parse(path);
-        loadGalleryImage(path);
+        loadGalleryImage(IMAGE_NAME);
 
     }
 

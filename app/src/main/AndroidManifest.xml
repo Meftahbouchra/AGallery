@@ -34,7 +34,7 @@
         <activity
             android:name=".Edit.ImageEditActivity"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen">
-            <intent-filter android:label="@string/edit">
+            <intent-filter android:label="@string/edit_small">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
@@ -62,7 +62,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
-
         </activity>
     </application>
 
