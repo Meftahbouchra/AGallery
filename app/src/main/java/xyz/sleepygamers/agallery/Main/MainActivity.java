@@ -1,6 +1,7 @@
 package xyz.sleepygamers.agallery.Main;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -46,6 +47,7 @@ import xyz.sleepygamers.agallery.Album.AlbumActivity;
 import xyz.sleepygamers.agallery.R;
 import xyz.sleepygamers.agallery.utils.Function;
 import xyz.sleepygamers.agallery.utils.MapComparator;
+import xyz.sleepygamers.agallery.utils.RealPathUtil;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,8 +56,10 @@ public class MainActivity extends AppCompatActivity {
     GridView galleryGridView;
     ArrayList<HashMap<String, String>> albumList = new ArrayList<HashMap<String, String>>();
     AlbumAdapter adapter;
+    boolean pickintent = false;
     // Activity request codes
     private static final int REQUEST_CAPTURE_IMAGE = 100;
+    private static final int REQUEST_PICK_IMAGE = 200;
     String imageFilePath;
 
 
@@ -64,6 +68,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().setTitle("Albums");
+
+        // For other ap image pick
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+        if (Intent.ACTION_PICK.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                pickintent = true;
+            }
+        }
+
 
         galleryGridView = (GridView) findViewById(R.id.galleryGridView);
 
@@ -302,7 +317,13 @@ public class MainActivity extends AppCompatActivity {
                                         final int position, long id) {
                     Intent intent = new Intent(MainActivity.this, AlbumActivity.class);
                     intent.putExtra("name", albumList.get(+position).get(Function.KEY_ALBUM));
-                    startActivity(intent);
+                    if (!pickintent) {
+                        startActivity(intent);
+                    } else {
+                        //added for other app image pick
+                        intent.putExtra("pickintent", pickintent);
+                        startActivityForResult(intent, REQUEST_PICK_IMAGE);
+                    }
                 }
             });
         }
@@ -333,6 +354,14 @@ public class MainActivity extends AppCompatActivity {
                 deleteFile();
             } else {
                 galleryAddPic();
+            }
+        }
+        if (requestCode == REQUEST_PICK_IMAGE) {
+            if (resultCode == RESULT_OK) {
+                Intent intentResult = new Intent();
+                intentResult.setData(data.getData());
+                setResult(Activity.RESULT_OK,intentResult);
+                finish();
             }
         }
 

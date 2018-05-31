@@ -2,6 +2,7 @@ package xyz.sleepygamers.agallery.Album;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -18,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +39,7 @@ public class AlbumActivity extends AppCompatActivity {
     ArrayList<HashMap<String, String>> imageList = new ArrayList<HashMap<String, String>>();
     String album_name = "";
     LoadAlbumImages loadAlbumTask;
-
+    boolean pickintent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,10 @@ public class AlbumActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         album_name = intent.getStringExtra("name");
+
+        //for other app pick intent
+        pickintent = intent.getExtras().getBoolean("pickintent", false);
+
         setTitle(album_name);
 
 
@@ -114,13 +120,24 @@ public class AlbumActivity extends AppCompatActivity {
             galleryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view,
                                         final int position, long id) {
-                    Intent intent = new Intent(AlbumActivity.this, GalleryPreview.class);
-                    //intent.putExtra("path", imageList.get(+position).get(Function.KEY_PATH));
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("list", imageList);
-                    intent.putExtras(bundle);
-                    intent.putExtra("position", position);
-                    startActivity(intent);
+                    if (!pickintent) {
+                        Intent intent = new Intent(AlbumActivity.this, GalleryPreview.class);
+                        //intent.putExtra("path", imageList.get(+position).get(Function.KEY_PATH));
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("list", imageList);
+                        intent.putExtras(bundle);
+                        intent.putExtra("position", position);
+                        startActivity(intent);
+                    } else {
+                        // Pick image result here
+
+                        String imgPath = imageList.get(+position).get(Function.KEY_PATH);
+                        Uri imguri = Uri.fromFile(new File(imgPath));
+                        Intent intentResult = new Intent();
+                        intentResult.setData(imguri);
+                        setResult(Activity.RESULT_OK,intentResult);
+                        finish();
+                    }
                 }
             });
         }
